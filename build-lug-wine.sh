@@ -63,7 +63,9 @@ shift || true
 cp -a "$WINE_TKG_SRC/wine-tkg-git" "$TMP_BUILD_DIR/"
 echo "Created temporary build directory: $TMP_BUILD_DIR"
 
-cp "$CONFIG" "$TMP_BUILD_DIR"
+cp "$WINE_TKG_SRC/wine-tkg-git/wine-tkg-profiles/sample-external-config.cfg" "$TMP_BUILD_DIR/$CONFIG"
+
+tee -a "$TMP_BUILD_DIR/$CONFIG" < "$CONFIG" > /dev/null
 
 cd "$TMP_BUILD_DIR"
 
@@ -86,11 +88,7 @@ done
 
 echo "Copied LUG patches to ./wine-tkg-userpatches/"
 
-# advanced-customization.cfg settings
-sed -i 's/staging_userargs="-W ntdll-NtAlertThreadByThreadId"/staging_userargs="-W ntdll-NtAlertThreadByThreadId -W ntdll-ForceBottomUpAlloc -W ntdll-Hide_Wine_Exports"/' $TMP_BUILD_DIR/wine-tkg-profiles/advanced-customization.cfg
-sed -i 's/NOLIB32="false"/NOLIB32="wow64"/' $TMP_BUILD_DIR/wine-tkg-profiles/advanced-customization.cfg
-
-# customization.cfg settings
+# customization
 case "$PRESET" in
   staging*)
     if [ -n "$WINE_VERSION" ]; then
