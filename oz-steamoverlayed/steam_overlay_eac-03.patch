@@ -1,0 +1,93 @@
+From ed80e7f8d55f0930fe0e925dff046dfa1bd1cfbe Mon Sep 17 00:00:00 2001
+From: Paul Gofman <pgofman@codeweavers.com>
+Date: Wed, 29 Nov 2023 17:02:43 -0600
+Subject: [PATCH] ntdll: HACK: Try to load steamoverlay.so manually if
+ LD_PRELOAD was lost.
+
+CW-Bug-Id: #23064
+---
+ dlls/ntdll/unix/loader.c  |  5 +++++
+ dlls/ntdll/unix/virtual.c | 31 ++++++++++++++++++++++++++++++-
+ 2 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+index 62504277d84..1b1fdaee9a5 100644
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -631,6 +631,8 @@ NTSTATUS exec_wineloader( char **argv, int socketfd, const struct pe_image_info
+     if (pe_info->wine_fakedll) res_start = res_end = 0;
+     if (pe_info->image_flags & IMAGE_FLAGS_ComPlusNativeReady) machine = native_machine;
+ 
++    unsetenv( "WINE_LD_PRELOAD" );
++
+     /* HACK: Unset LD_PRELOAD before executing explorer.exe to disable buggy gameoverlayrenderer.so */
+     if (ld_preload && argv[2] && !strcmp( argv[2], "C:\\windows\\system32\\explorer.exe" ) &&
+         argv[3] && !strcmp( argv[3], "/desktop" ))
+@@ -659,8 +661,11 @@ NTSTATUS exec_wineloader( char **argv, int socketfd, const struct pe_image_info
+         while (*next);
+ 
+         putenv( env );
++        ld_preload = NULL;
+     }
+ 
++    if (ld_preload) setenv( "WINE_LD_PRELOAD", ld_preload, 1 );
++
+     signal( SIGPIPE, SIG_DFL );
+ 
+     snprintf( socket_env, sizeof(socket_env), "WINESERVERSOCKET=%u", socketfd );
+diff --git a/dlls/ntdll/unix/virtual.c b/dlls/ntdll/unix/virtual.c
+index cbfe3fc16c4..3f9b8c89eda 100644
+--- a/dlls/ntdll/unix/virtual.c
++++ b/dlls/ntdll/unix/virtual.c
+@@ -1014,6 +1014,30 @@ void *get_builtin_so_handle( void *module )
+     return ret;
+ }
+ 
++static void load_steam_overlay(const char *unix_lib_path)
++{
++    const char *preload, *p;
++    char path[PATH_MAX];
++    unsigned int len;
++    void *handle;
++
++    if (!strstr(unix_lib_path, "winex11.so")) return;
++    if (getenv("LD_PRELOAD") || !(preload = getenv("WINE_LD_PRELOAD"))) return;
++
++    p = preload;
++    while (*(preload = p))
++    {
++        p = strchrnul( preload, ':' );
++        len = p - preload;
++        if (*p) ++p;
++        if (len + 1 > sizeof(path)) continue;
++        memcpy( path, preload, len );
++        path[len] = 0;
++        if (!strstr( path, "gameoverlayrenderer.so" )) continue;
++        handle = dlopen( path, RTLD_NOW | RTLD_GLOBAL );
++        FIXME( "HACK: tried to load %s, handle %p.\n", debugstr_a(path), handle );
++    }
++}
+ 
+ /***********************************************************************
+  *           get_builtin_unix_funcs
+@@ -1031,6 +1055,7 @@ static NTSTATUS get_builtin_unix_funcs( void *module, BOOL wow, const void **fun
+         if (builtin->module != module) continue;
+         if (builtin->unix_path && !builtin->unix_handle)
+         {
++            load_steam_overlay(builtin->unix_path);
+             builtin->unix_handle = dlopen( builtin->unix_path, RTLD_NOW );
+             if (!builtin->unix_handle)
+                 WARN_(module)( "failed to load %s: %s\n", debugstr_a(builtin->unix_path), dlerror() );
+@@ -1062,7 +1087,11 @@ NTSTATUS load_builtin_unixlib( void *module, const char *name )
+         if (builtin->module != module) continue;
+         if (!builtin->unix_path) builtin->unix_path = strdup( name );
+         else status = STATUS_IMAGE_ALREADY_LOADED;
+-        if (!builtin->unix_handle) builtin->unix_handle = dlopen( builtin->unix_path, RTLD_NOW );
++        if (!builtin->unix_handle)
++        {
++            load_steam_overlay(builtin->unix_path);
++            builtin->unix_handle = dlopen( builtin->unix_path, RTLD_NOW );
++        }
+         break;
+     }
+     server_leave_uninterrupted_section( &virtual_mutex, &sigset );
