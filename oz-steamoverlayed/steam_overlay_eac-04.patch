@@ -1,0 +1,23 @@
+From 938d877dad82f3e8242695194ca751f507127948 Mon Sep 17 00:00:00 2001
+From: Vingian <89702391+Vingian@users.noreply.github.com>
+Date: Thu, 31 Jul 2025 01:41:35 -0300
+Subject: [PATCH] ntdll: HACK: Try to load Steam overlay manually even when
+ using winewayland
+
+---
+ dlls/ntdll/unix/virtual.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/dlls/ntdll/unix/virtual.c b/dlls/ntdll/unix/virtual.c
+index 355a88986a3..1e2bc7ffd1f 100644
+--- a/dlls/ntdll/unix/virtual.c
++++ b/dlls/ntdll/unix/virtual.c
+@@ -1021,7 +1021,7 @@ static void load_steam_overlay(const char *unix_lib_path)
+     unsigned int len;
+     void *handle;
+ 
+-    if (!strstr(unix_lib_path, "winex11.so")) return;
++    if (!strstr(unix_lib_path, "winex11.so") && !strstr(unix_lib_path, "winewayland.so")) return;
+     if (getenv("LD_PRELOAD") || !(preload = getenv("WINE_LD_PRELOAD"))) return;
+ 
+     p = preload;
