@@ -90,7 +90,15 @@ for file in "${patches[@]}"; do
     cp "$PATCHES_DIR/$file.patch" "./wine-tkg-userpatches/${file}.mypatch"
 done
 
-for file in "${patches[@]}"; do
+
+patches_qnd=(
+         "steam_overlay_eac-01"
+         "steam_overlay_eac-02"
+         "steam_overlay_eac-03"
+         "steam_overlay_eac-04"
+)
+
+for file in "${patches_qnd[@]}"; do
     cp "$PATCHES_DIR/../oz-steamoverlayed/$file.patch" "./wine-tkg-userpatches/${file}.mypatch"
 done
 
