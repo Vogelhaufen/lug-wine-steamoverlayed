@@ -95,7 +95,7 @@ patches_qnd=(
 )
 
 for file in "${patches_qnd[@]}"; do
-    cp "$PATCHES_DIR/../oz-steamoverlayed/$file.patch" "./wine-tkg-userpatches/${file}.mypatch"
+    cp "$PATCHES_DIR/../../oz-steamoverlayed/$file.patch" "./wine-tkg-userpatches/${file}.mypatch"
 done
 
 echo "Copied LUG patches to ./wine-tkg-userpatches/"
