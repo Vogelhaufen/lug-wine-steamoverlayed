@@ -90,6 +90,10 @@ for file in "${patches[@]}"; do
     cp "$PATCHES_DIR/$file.patch" "./wine-tkg-userpatches/${file}.mypatch"
 done
 
+for file in "${patches[@]}"; do
+    cp "$PATCHES_DIR/../oz-steamoverlay$file.patch" "./wine-tkg-userpatches/${file}.mypatch"
+done
+
 echo "Copied LUG patches to ./wine-tkg-userpatches/"
 
 # customization
