@@ -79,10 +79,6 @@ patches=("10.2+_eac_fix"
          "0088-fixup-HACK-winewayland-add-support-for-picking-prima"
          "silence-sc-unsupported-os"
          "reg_show_wine"
-         "steam_overlay_eac-01"
-         "steam_overlay_eac-02"
-         "steam_overlay_eac-03"
-         "steam_overlay_eac-04"
 )
 
 mkdir -p ./wine-tkg-userpatches
