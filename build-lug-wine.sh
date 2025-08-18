@@ -8,7 +8,8 @@ PATCHES_DIR="$SCRIPT_DIR/patches/wine"
 TMP_BUILD_DIR="$SCRIPT_DIR/wine-tkg-build-tmp-$(mktemp -u XXXXXX)"
 
 cleanup() {
-  rm -rf "$TMP_BUILD_DIR"
+ # don't delete my build-dir. ty
+ # rm -rf "$TMP_BUILD_DIR"
   echo "Cleaned up temporary build directory."
 }
 trap cleanup EXIT
@@ -86,7 +87,7 @@ for file in "${patches[@]}"; do
     cp "$PATCHES_DIR/$file.patch" "./wine-tkg-userpatches/${file}.mypatch"
 done
 
-
+# BEGIN lazy af quick n dirty copy pasta to make it work
 patches_qnd=(
          "steam_overlay_eac-01"
          "steam_overlay_eac-02"
@@ -97,6 +98,7 @@ patches_qnd=(
 for file in "${patches_qnd[@]}"; do
     cp "$PATCHES_DIR/../../oz-steamoverlayed/$file.patch" "./wine-tkg-userpatches/${file}.mypatch"
 done
+# END lazy af quick n dirty copy pasta to make it work
 
 echo "Copied LUG patches to ./wine-tkg-userpatches/"
 
