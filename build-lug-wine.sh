@@ -93,6 +93,7 @@ patches_qnd=(
          "steam_overlay_eac-02"
          "steam_overlay_eac-03"
          "steam_overlay_eac-04"
+         "timeout-eac"
 )
 
 for file in "${patches_qnd[@]}"; do
